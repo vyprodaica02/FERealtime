@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import axios from "axios";
 import { useEffect, useState } from "react";
-
+import { useAuth } from "./AuthContext";
 interface UserData {
   id: number;
   tenUser: string;
@@ -9,14 +9,14 @@ interface UserData {
 
 const PageHome = () => {
   const [userList, setUserList] = useState<UserData[]>([]);
+  const { token } = useAuth();
   useEffect(() => {
-    console.log("useEffect is called");
     const fetchData = async () => {
       try {
         const response = await axios.get(
           "https://localhost:7181/api/User/DanhSachUser"
         );
-        setUserList(response.data); // Giả sử API trả về một mảng người dùng
+        setUserList(response.data);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách người dùng", error);
       }
@@ -24,10 +24,9 @@ const PageHome = () => {
 
     fetchData();
   }, []);
-  console.log(userList);
 
   return (
-    <div>
+    <div className="">
       <div className="flex h-screen">
         {/* Sidebar */}
         <div className="w-1/4 bg-gray-800 p-4 text-white">
@@ -45,17 +44,7 @@ const PageHome = () => {
             ))}
           </ul>
         </div>
-      </div>
-    </div>
-  );
-};
-
-export default PageHome;
-{
-  /* Chat Window */
-}
-{
-  /* <div className="flex-1 p-4 border-l border-gray-300">
+        <div className="flex-1 p-4 border-l border-gray-300">
           <div className="mb-4">
             <h2 className="text-lg font-semibold">Người dùng 1</h2>
           </div>
@@ -80,5 +69,10 @@ export default PageHome;
               className="w-full border rounded-md p-2"
             />
           </div>
-        </div> */
-}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PageHome;

@@ -3,10 +3,12 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 const FormDangNhap = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { token, setAuthData } = useAuth();
   const handleLogin = async (e: any) => {
     e.preventDefault();
 
@@ -16,7 +18,7 @@ const FormDangNhap = () => {
 
     try {
       const response = await axios.post(apiUrl);
-      console.log("Đăng nhập thành công", response.data);
+      setAuthData(response.data);
       navigate("/home");
     } catch (error) {
       // Xử lý lỗi khi đăng nhập không thành công
