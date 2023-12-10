@@ -4,13 +4,13 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
-import jwt from "jsonwebtoken";
+import Cookies from "js-cookie";
 const FormDangNhap = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { token, setAuthData } = useAuth();
-  const handleLogin = async (e: any) => {
+  const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
     const apiUrl = `https://localhost:7181/api/Login/Login?userName=${encodeURIComponent(
@@ -19,7 +19,14 @@ const FormDangNhap = () => {
 
     try {
       const response = await axios.post(apiUrl);
+
+      // Lưu thông tin vào cookies
+      Cookies.set("authData", response.data);
+
+      // Lưu thông tin vào context (nếu cần)
       setAuthData(response.data);
+
+      // Chuyển hướng đến trang home
       navigate("/home");
     } catch (error) {
       // Xử lý lỗi khi đăng nhập không thành công

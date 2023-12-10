@@ -1,15 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
-import * as signalR from "@microsoft/signalr";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 interface UserData {
   id: number;
   tenUser: string;
 }
 
-interface Message {
-  content: string;
+interface JwtPayload {
+  userId: number;
 }
 
 const PageHome = () => {
@@ -17,8 +21,15 @@ const PageHome = () => {
   const { token } = useAuth();
   const [senUser, setSenUser] = useState<number | undefined>(undefined);
   const [message, setMessage] = useState("");
-  const [, setMessages] = useState<Message[]>([]);
-  const [listMessage, setListMessage] = useState([]);
+  const [listMessage, setListMessage] = useState<any[]>([]);
+
+  function getTokenFromCookies() {
+    return Cookies.get("authData");
+  }
+  const tokens = getTokenFromCookies();
+  const decoded =
+    typeof tokens === "string" ? (jwtDecode(tokens) as JwtPayload) : undefined;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -30,51 +41,27 @@ const PageHome = () => {
         console.error("Lỗi khi lấy danh sách người dùng", error);
       }
     };
-
     fetchData();
   }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://localhost:7181/api/Chat/GetMessage",
-          {
-            userSenId: token.id,
-            userResenId: senUser,
-          }
+          `https://localhost:7181/api/Chat/GetMessage?senUserId=${decoded?.userId}&ResenUserid=${senUser}`
         );
+
         setListMessage(response.data);
       } catch (error) {
         console.error("Lỗi khi lấy danh sách người dùng", error);
       }
     };
 
-    fetchData();
-  }, [senUser]);
+    if (decoded) {
+      fetchData();
+    }
+  }, [senUser, decoded?.userId]);
   console.log(listMessage);
-  console.log(token);
-
-  useEffect(() => {
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl("/chatHub") // Đường dẫn Hub SignalR
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
-
-    connection
-      .start()
-      .then(() => console.log("Connected to SignalR"))
-      .catch((err) => console.error("Error connecting to SignalR:", err));
-
-    connection.on("ReceiveMessage", (message) => {
-      console.log("Received message:", message);
-      // Cập nhật danh sách tin nhắn
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
-
-    return () => {
-      connection.stop();
-    };
-  }, []);
 
   const handleSendMessage = async () => {
     // Gửi tin nhắn thông qua API
@@ -83,8 +70,8 @@ const PageHome = () => {
         "https://localhost:7181/api/Chat/GuiTinNhan",
         {
           content: message,
-          senderUserId: token.id, // Thay thế bằng ID người dùng hiện tại
-          receiverUserId: senUser, // Thay thế bằng ID người dùng nhận
+          senderUserId: decoded?.userId,
+          receiverUserId: senUser,
         }
       );
 
@@ -100,7 +87,6 @@ const PageHome = () => {
   const handleUserClick = (user: UserData) => {
     // Lưu thông tin người dùng được chọn vào state
     setSenUser(user.id);
-    console.log(senUser);
   };
 
   const handleKeyDown = (event: { key: string }) => {
@@ -133,21 +119,28 @@ const PageHome = () => {
           </ul>
         </div>
         <div className="flex-1 p-4 border-l border-gray-300">
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold">Người dùng 1</h2>
-          </div>
           <div className="flex flex-col-reverse space-y-2 overflow-y-auto h-full">
-            <div className="flex items-end">
-              <div className="bg-blue-500 text-white p-2 rounded-lg max-w-2/3">
-                Xin chào! Bạn có cần giúp gì không?
-              </div>
-              <div className="ml-2 text-gray-500 text-sm">12:30 PM</div>
+            <div className="flex justify-end">
+              {listMessage.map((lstMessage) => (
+                <div key={lstMessage.id}>
+                  {lstMessage.senderUserId == decoded?.userId && (
+                    <div className="bg-blue-500 text-white p-2 rounded-lg max-w-2/3">
+                      {lstMessage.content}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-            <div className="flex items-end">
-              <div className="bg-gray-300 p-2 rounded-lg max-w-2/3">
-                Có vẻ như tôi cần một chút giúp đỡ.
-              </div>
-              <div className="ml-2 text-gray-500 text-sm">12:32 PM</div>
+            <div className="flex">
+              {listMessage.map((lstMessage) => (
+                <div key={lstMessage.id}>
+                  {lstMessage.receiverUserId == senUser && (
+                    <div className="bg-gray-300 p-2 rounded-lg max-w-2/3">
+                      {lstMessage.content}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
           <div className="mt-4">

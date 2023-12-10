@@ -13,11 +13,16 @@
     "@microsoft/signalr": "^8.0.0",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.6.2",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
+    "jws": "^4.0.0",
+    "jwt-decode": "^4.0.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "safe-buffer": "^5.2.1"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.15",
